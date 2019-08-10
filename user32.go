@@ -139,6 +139,7 @@ var (
 	procWaitMessage                   = moduser32.NewProc("WaitMessage")
 	procSetProcessDPIAware            = moduser32.NewProc("SetProcessDPIAware")
 	procUnregisterClassW              = moduser32.NewProc("UnregisterClassW")
+	procCreatePopupMenu               = moduser32.NewProc("CreatePopupMenu")
 )
 
 func SendMessageTimeout(hwnd HWND, msg uint32, wParam, lParam uintptr, fuFlags, uTimeout uint32, lpdwResult uintptr) uintptr {
@@ -1287,4 +1288,18 @@ func UnregisterClassW(lpClassName string, hInstance HINSTANCE) bool {
 		uintptr(pointerStringWithoutError(lpClassName)),
 		uintptr(hInstance))
 	return ret != 0
+}
+
+// CreatePopupMenu Creates a drop-down menu, submenu, or shortcut menu. The menu is initially empty.
+// You can insert or append menu items by using the **InsertMenuItem** function. You can also use the **InsertMenu**
+// function to insert menu items and the **AppendMenu** function to append menu items.
+// See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-createpopupmenu
+func CreatePopupMenu() (HMENU, error) {
+	ret, _, err := procCreatePopupMenu.Call()
+
+	if ret == 0 && err.(syscall.Errno) != ERROR_SUCCESS {
+		return HMENU(ret), err
+	}
+
+	return HMENU(ret), nil
 }
