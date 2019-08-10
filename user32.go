@@ -137,7 +137,8 @@ var (
 	procVkKeyScanW                    = moduser32.NewProc("VkKeyScanW")
 	procVkKeyScanExW                  = moduser32.NewProc("VkKeyScanExW")
 	procWaitMessage                   = moduser32.NewProc("WaitMessage")
-	setProcessDPIAware                = moduser32.NewProc("SetProcessDPIAware")
+	procSetProcessDPIAware            = moduser32.NewProc("SetProcessDPIAware")
+	procUnregisterClassW              = moduser32.NewProc("UnregisterClassW")
 )
 
 func SendMessageTimeout(hwnd HWND, msg uint32, wParam, lParam uintptr, fuFlags, uTimeout uint32, lpdwResult uintptr) uintptr {
@@ -1275,6 +1276,15 @@ func VkKeyScanExW(char uint16, hkl HKL) int16 {
 // Sets the process-default DPI awareness to system-DPI awareness.
 // See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setprocessdpiaware
 func SetProcessDPIAware() bool {
-	ret, _, _ := setProcessDPIAware.Call()
+	ret, _, _ := procSetProcessDPIAware.Call()
+	return ret != 0
+}
+
+// UnregisterClassW Unregisters a window class, freeing the memory required for the class.
+// See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-unregisterclassw
+func UnregisterClassW(lpClassName string, hInstance HINSTANCE) bool {
+	ret, _, _ := procUnregisterClassW.Call(
+		uintptr(pointerStringWithoutError(lpClassName)),
+		uintptr(hInstance))
 	return ret != 0
 }
