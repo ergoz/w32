@@ -140,6 +140,7 @@ var (
 	procSetProcessDPIAware            = moduser32.NewProc("SetProcessDPIAware")
 	procUnregisterClassW              = moduser32.NewProc("UnregisterClassW")
 	procCreatePopupMenu               = moduser32.NewProc("CreatePopupMenu")
+	procCreateMenu                    = moduser32.NewProc("CreateMenu")
 )
 
 func SendMessageTimeout(hwnd HWND, msg uint32, wParam, lParam uintptr, fuFlags, uTimeout uint32, lpdwResult uintptr) uintptr {
@@ -1296,6 +1297,19 @@ func UnregisterClassW(lpClassName string, hInstance HINSTANCE) bool {
 // See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-createpopupmenu
 func CreatePopupMenu() (HMENU, error) {
 	ret, _, err := procCreatePopupMenu.Call()
+
+	if ret == 0 && err.(syscall.Errno) != ERROR_SUCCESS {
+		return HMENU(ret), err
+	}
+
+	return HMENU(ret), nil
+}
+
+// CreateMenu Creates a menu. The menu is initially empty, but it can be filled with menu items
+// by using the **InsertMenuItem**, **AppendMenu**, and **InsertMenu** functions.
+// See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-createmenu
+func CreateMenu() (HMENU, error) {
+	ret, _, err := procCreateMenu.Call()
 
 	if ret == 0 && err.(syscall.Errno) != ERROR_SUCCESS {
 		return HMENU(ret), err
