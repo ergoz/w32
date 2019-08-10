@@ -29,7 +29,7 @@ func VariantInit(v *VARIANT) {
 }
 
 func SysAllocString(v string) (ss *int16) {
-	pss, _, _ := procSysAllocString.Call(uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(v))))
+	pss, _, _ := procSysAllocString.Call(uintptr(pointerStringWithoutError(v)))
 	ss = (*int16)(unsafe.Pointer(pss))
 	return
 }

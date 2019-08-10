@@ -22,6 +22,7 @@ var (
 	procSHBrowseForFolder   = modshell32.NewProc("SHBrowseForFolderW")
 	procSHGetPathFromIDList = modshell32.NewProc("SHGetPathFromIDListW")
 	procShellExecute        = modshell32.NewProc("ShellExecuteW")
+	procShellNotifyIconW    = modshell32.NewProc("Shell_NotifyIconW")
 )
 
 func SHBrowseForFolder(bi *BROWSEINFO) uintptr {
@@ -89,19 +90,19 @@ func DragFinish(hDrop HDROP) {
 func ShellExecute(hwnd HWND, lpOperation, lpFile, lpParameters, lpDirectory string, nShowCmd int) error {
 	var op, param, directory uintptr
 	if len(lpOperation) != 0 {
-		op = uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(lpOperation)))
+		op = uintptr(pointerStringWithoutError(lpOperation))
 	}
 	if len(lpParameters) != 0 {
-		param = uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(lpParameters)))
+		param = uintptr(pointerStringWithoutError(lpParameters))
 	}
 	if len(lpDirectory) != 0 {
-		directory = uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(lpDirectory)))
+		directory = uintptr(pointerStringWithoutError(lpDirectory))
 	}
 
 	ret, _, _ := procShellExecute.Call(
 		uintptr(hwnd),
 		op,
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(lpFile))),
+		uintptr(pointerStringWithoutError(lpFile)),
 		param,
 		directory,
 		uintptr(nShowCmd))
@@ -146,8 +147,18 @@ func ShellExecute(hwnd HWND, lpOperation, lpFile, lpParameters, lpDirectory stri
 func ExtractIcon(lpszExeFileName string, nIconIndex int) HICON {
 	ret, _, _ := procExtractIcon.Call(
 		0,
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(lpszExeFileName))),
+		uintptr(pointerStringWithoutError(lpszExeFileName)),
 		uintptr(nIconIndex))
 
 	return HICON(ret)
+}
+
+// Shell_NotifyIconW Sends a message to the taskbar's status area.
+func Shell_NotifyIconW(dwMessage string, lpData int) bool {
+	ret, _, _ := procShellNotifyIconW.Call(
+		0,
+		uintptr(pointerStringWithoutError(lpszExeFileName)),
+		uintptr(nIconIndex))
+
+	return bool(ret)
 }

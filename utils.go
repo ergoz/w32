@@ -87,7 +87,7 @@ func ComGetIDsOfName(disp *IDispatch, names []string) []int32 {
 	wnames := make([]*uint16, len(names))
 	dispid := make([]int32, len(names))
 	for i := 0; i < len(names); i++ {
-		wnames[i] = syscall.StringToUTF16Ptr(names[i])
+		wnames[i], _ = syscall.UTF16PtrFromString(names[i])
 	}
 	hr, _, _ := syscall.Syscall6(disp.lpVtbl.pGetIDsOfNames, 6,
 		uintptr(unsafe.Pointer(disp)),
@@ -241,4 +241,14 @@ func IsErrSuccess(err error) bool {
 		}
 	}
 	return false
+}
+
+func pointerStringWithError(data string) (unsafe.Pointer, error) {
+	pp, err := syscall.UTF16PtrFromString(data)
+	return unsafe.Pointer(pp), err
+}
+
+func pointerStringWithoutError(data string) unsafe.Pointer {
+	pp, _ := syscall.UTF16PtrFromString(data)
+	return unsafe.Pointer(pp)
 }

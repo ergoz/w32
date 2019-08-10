@@ -186,11 +186,11 @@ func FindWindowExW(hwndParent, hwndChildAfter HWND, className, windowName *uint1
 func FindWindowExS(hwndParent, hwndChildAfter HWND, className, windowName *string) HWND {
 	var class *uint16 = nil
 	if className != nil {
-		class = syscall.StringToUTF16Ptr(*className)
+		class, _ = syscall.UTF16PtrFromString(*className)
 	}
 	var window *uint16 = nil
 	if windowName != nil {
-		window = syscall.StringToUTF16Ptr(*windowName)
+		window, _ = syscall.UTF16PtrFromString(*windowName)
 	}
 	return FindWindowExW(hwndParent, hwndChildAfter, class, window)
 }
@@ -207,11 +207,11 @@ func FindWindowW(className, windowName *uint16) HWND {
 func FindWindowS(className, windowName *string) HWND {
 	var class *uint16 = nil
 	if className != nil {
-		class = syscall.StringToUTF16Ptr(*className)
+		class, _ = syscall.UTF16PtrFromString(*className)
 	}
 	var window *uint16 = nil
 	if windowName != nil {
-		window = syscall.StringToUTF16Ptr(*windowName)
+		window, _ = syscall.UTF16PtrFromString(*windowName)
 	}
 	return FindWindowW(class, window)
 }
@@ -267,7 +267,7 @@ func LoadIcon(instance HINSTANCE, iconName *uint16) HICON {
 func LoadIconS(instance HINSTANCE, iconName *string) HICON {
 	var icon *uint16 = nil
 	if iconName != nil {
-		icon = syscall.StringToUTF16Ptr(*iconName)
+		icon, _ = syscall.UTF16PtrFromString(*iconName)
 	}
 	return LoadIcon(instance, icon)
 }
@@ -284,7 +284,7 @@ func LoadCursor(instance HINSTANCE, cursorName *uint16) HCURSOR {
 func LoadCursorS(instance HINSTANCE, cursorName *string) HCURSOR {
 	var cursor *uint16 = nil
 	if cursorName != nil {
-		cursor = syscall.StringToUTF16Ptr(*cursorName)
+		cursor, _ = syscall.UTF16PtrFromString(*cursorName)
 	}
 	return LoadCursor(instance, cursor)
 }
@@ -329,11 +329,11 @@ func CreateWindowExS(exStyle uint, className, windowName *string,
 	instance HINSTANCE, param unsafe.Pointer) HWND {
 	var class *uint16 = nil
 	if className != nil {
-		class = syscall.StringToUTF16Ptr(*className)
+		class, _ = syscall.UTF16PtrFromString(*className)
 	}
 	var window *uint16 = nil
 	if windowName != nil {
-		window = syscall.StringToUTF16Ptr(*windowName)
+		window, _ = syscall.UTF16PtrFromString(*windowName)
 	}
 	return CreateWindowEx(
 		exStyle,
@@ -456,7 +456,7 @@ func WaitMessage() bool {
 func SetWindowText(hwnd HWND, text string) {
 	procSetWindowText.Call(
 		uintptr(hwnd),
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(text))))
+		uintptr(pointerStringWithoutError(text)))
 }
 
 func GetWindowTextLength(hwnd HWND) int {
@@ -644,8 +644,8 @@ func GetWindowThreadProcessId(hwnd HWND) (HANDLE, int) {
 func MessageBox(hwnd HWND, text, caption string, flags uint) int {
 	ret, _, _ := procMessageBox.Call(
 		uintptr(hwnd),
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(text))),
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(caption))),
+		uintptr(pointerStringWithoutError(text)),
+		uintptr(pointerStringWithoutError(caption)),
 		uintptr(flags))
 
 	return int(ret)
@@ -875,7 +875,7 @@ func FillRect(hDC HDC, lprc *RECT, hbr HBRUSH) bool {
 func DrawText(hDC HDC, text string, uCount int, lpRect *RECT, uFormat uint) int {
 	ret, _, _ := procDrawText.Call(
 		uintptr(hDC),
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(text))),
+		uintptr(pointerStringWithoutError(text)),
 		uintptr(uCount),
 		uintptr(unsafe.Pointer(lpRect)),
 		uintptr(uFormat))

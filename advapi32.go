@@ -73,7 +73,7 @@ func ControlTrace(hTrace TRACEHANDLE, lpSessionName string, props *EVENT_TRACE_P
 
 	ret, _, _ := procControlTrace.Call(
 		uintptr(unsafe.Pointer(hTrace)),
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(lpSessionName))),
+		uintptr(pointerStringWithoutError(lpSessionName)),
 		uintptr(unsafe.Pointer(props)),
 		uintptr(dwControl))
 
@@ -88,7 +88,7 @@ func StartTrace(lpSessionName string, props *EVENT_TRACE_PROPERTIES) (hTrace TRA
 
 	ret, _, _ := procStartTrace.Call(
 		uintptr(unsafe.Pointer(&hTrace)),
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(lpSessionName))),
+		uintptr(pointerStringWithoutError(lpSessionName)),
 		uintptr(unsafe.Pointer(props)))
 
 	if ret == ERROR_SUCCESS {
@@ -119,7 +119,7 @@ func RegCreateKey(hKey HKEY, subKey string) HKEY {
 	var result HKEY
 	ret, _, _ := procRegCreateKeyEx.Call(
 		uintptr(hKey),
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(subKey))),
+		uintptr(pointerStringWithoutError(subKey)),
 		uintptr(0),
 		uintptr(0),
 		uintptr(0),
@@ -135,7 +135,7 @@ func RegOpenKeyEx(hKey HKEY, subKey string, samDesired uint32) HKEY {
 	var result HKEY
 	ret, _, _ := procRegOpenKeyEx.Call(
 		uintptr(hKey),
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(subKey))),
+		uintptr(pointerStringWithoutError(subKey)),
 		uintptr(0),
 		uintptr(samDesired),
 		uintptr(unsafe.Pointer(&result)))
@@ -161,11 +161,11 @@ func RegGetRaw(hKey HKEY, subKey string, value string) []byte {
 	var bufLen uint32
 	var valptr unsafe.Pointer
 	if len(value) > 0 {
-		valptr = unsafe.Pointer(syscall.StringToUTF16Ptr(value))
+		valptr = pointerStringWithoutError(value)
 	}
 	procRegGetValue.Call(
 		uintptr(hKey),
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(subKey))),
+		uintptr(pointerStringWithoutError(subKey)),
 		uintptr(valptr),
 		uintptr(RRF_RT_ANY),
 		0,
@@ -179,7 +179,7 @@ func RegGetRaw(hKey HKEY, subKey string, value string) []byte {
 	buf := make([]byte, bufLen)
 	ret, _, _ := procRegGetValue.Call(
 		uintptr(hKey),
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(subKey))),
+		uintptr(pointerStringWithoutError(subKey)),
 		uintptr(valptr),
 		uintptr(RRF_RT_ANY),
 		0,
@@ -196,7 +196,7 @@ func RegGetRaw(hKey HKEY, subKey string, value string) []byte {
 func RegSetBinary(hKey HKEY, subKey string, value []byte) (errno int) {
 	var lptr, vptr unsafe.Pointer
 	if len(subKey) > 0 {
-		lptr = unsafe.Pointer(syscall.StringToUTF16Ptr(subKey))
+		lptr = pointerStringWithoutError(subKey)
 	}
 	if len(value) > 0 {
 		vptr = unsafe.Pointer(&value[0])
@@ -215,7 +215,7 @@ func RegSetBinary(hKey HKEY, subKey string, value []byte) (errno int) {
 func RegSetString(hKey HKEY, subKey string, value string) (errno int) {
 	var lptr, vptr unsafe.Pointer
 	if len(subKey) > 0 {
-		lptr = unsafe.Pointer(syscall.StringToUTF16Ptr(subKey))
+		lptr = pointerStringWithoutError(subKey)
 	}
 	var buf []uint16
 	if len(value) > 0 {
@@ -239,7 +239,7 @@ func RegSetString(hKey HKEY, subKey string, value string) (errno int) {
 func RegSetUint32(hKey HKEY, subKey string, value uint32) (errno int) {
 	var lptr unsafe.Pointer
 	if len(subKey) > 0 {
-		lptr = unsafe.Pointer(syscall.StringToUTF16Ptr(subKey))
+		lptr = pointerStringWithoutError(subKey)
 	}
 	vptr := unsafe.Pointer(&value)
 	ret, _, _ := procRegSetValueEx.Call(
@@ -257,8 +257,8 @@ func RegGetString(hKey HKEY, subKey string, value string) string {
 	var bufLen uint32
 	procRegGetValue.Call(
 		uintptr(hKey),
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(subKey))),
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(value))),
+		uintptr(pointerStringWithoutError(subKey)),
+		uintptr(pointerStringWithoutError(value)),
 		uintptr(RRF_RT_REG_SZ),
 		0,
 		0,
@@ -271,8 +271,8 @@ func RegGetString(hKey HKEY, subKey string, value string) string {
 	buf := make([]uint16, bufLen)
 	ret, _, _ := procRegGetValue.Call(
 		uintptr(hKey),
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(subKey))),
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(value))),
+		uintptr(pointerStringWithoutError(subKey)),
+		uintptr(pointerStringWithoutError(value)),
 		uintptr(RRF_RT_REG_SZ),
 		0,
 		uintptr(unsafe.Pointer(&buf[0])),
@@ -289,8 +289,8 @@ func RegGetUint32(hKey HKEY, subKey string, value string) (data uint32, errno in
 	var dataLen uint32 = uint32(unsafe.Sizeof(data))
 	ret, _, _ := procRegGetValue.Call(
 		uintptr(hKey),
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(subKey))),
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(value))),
+		uintptr(pointerStringWithoutError(subKey)),
+		uintptr(pointerStringWithoutError(value)),
 		uintptr(RRF_RT_REG_DWORD),
 		0,
 		uintptr(unsafe.Pointer(&data)),
@@ -303,8 +303,8 @@ func RegGetUint32(hKey HKEY, subKey string, value string) (data uint32, errno in
 func RegSetKeyValue(hKey HKEY, subKey string, valueName string, dwType uint32, data uintptr, cbData uint16) (errno int) {
 	ret, _, _ := procRegSetKeyValue.Call(
 		uintptr(hKey),
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(subKey))),
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(valueName))),
+		uintptr(pointerStringWithoutError(subKey))),
+		uintptr(pointerStringWithoutError(valueName))),
 		uintptr(dwType),
 		data,
 		uintptr(cbData))
@@ -316,8 +316,8 @@ func RegSetKeyValue(hKey HKEY, subKey string, valueName string, dwType uint32, d
 func RegDeleteKeyValue(hKey HKEY, subKey string, valueName string) (errno int) {
 	ret, _, _ := procRegDeleteKeyValue.Call(
 		uintptr(hKey),
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(subKey))),
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(valueName))))
+		uintptr(pointerStringWithoutError(subKey)),
+		uintptr(pointerStringWithoutError(valueName)))
 
 	return int(ret)
 }
@@ -325,7 +325,7 @@ func RegDeleteKeyValue(hKey HKEY, subKey string, valueName string) (errno int) {
 func RegDeleteValue(hKey HKEY, valueName string) (errno int) {
 	ret, _, _ := procRegDeleteValue.Call(
 		uintptr(hKey),
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(valueName))))
+		uintptr(pointerStringWithoutError(valueName)))
 
 	return int(ret)
 }
@@ -333,7 +333,7 @@ func RegDeleteValue(hKey HKEY, valueName string) (errno int) {
 func RegDeleteTree(hKey HKEY, subKey string) (errno int) {
 	ret, _, _ := procRegDeleteTree.Call(
 		uintptr(hKey),
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(subKey))))
+		uintptr(pointerStringWithoutError(subKey)))
 
 	return int(ret)
 }
@@ -355,8 +355,8 @@ func RegEnumKeyEx(hKey HKEY, index uint32) string {
 
 func OpenEventLog(servername string, sourcename string) HANDLE {
 	ret, _, _ := procOpenEventLog.Call(
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(servername))),
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(sourcename))))
+		uintptr(pointerStringWithoutError(servername)),
+		uintptr(pointerStringWithoutError(sourcename)))
 
 	return HANDLE(ret)
 }
@@ -384,10 +384,10 @@ func CloseEventLog(eventlog HANDLE) bool {
 func OpenSCManager(lpMachineName, lpDatabaseName string, dwDesiredAccess uint32) (HANDLE, error) {
 	var p1, p2 uintptr
 	if len(lpMachineName) > 0 {
-		p1 = uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(lpMachineName)))
+		p1 = uintptr(pointerStringWithoutError(lpMachineName))
 	}
 	if len(lpDatabaseName) > 0 {
-		p2 = uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(lpDatabaseName)))
+		p2 = uintptr(pointerStringWithoutError(lpDatabaseName))
 	}
 	ret, _, _ := procOpenSCManager.Call(
 		p1,
@@ -412,7 +412,7 @@ func CloseServiceHandle(hSCObject HANDLE) error {
 func OpenService(hSCManager HANDLE, lpServiceName string, dwDesiredAccess uint32) (HANDLE, error) {
 	ret, _, _ := procOpenService.Call(
 		uintptr(hSCManager),
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(lpServiceName))),
+		uintptr(pointerStringWithoutError(lpServiceName)),
 		uintptr(dwDesiredAccess))
 
 	if ret == 0 {
@@ -433,7 +433,7 @@ func StartService(hService HANDLE, lpServiceArgVectors []string) error {
 	} else {
 		lpArgs := make([]uintptr, l)
 		for i := 0; i < l; i++ {
-			lpArgs[i] = uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(lpServiceArgVectors[i])))
+			lpArgs[i] = uintptr(pointerStringWithoutError(lpServiceArgVectors[i]))
 		}
 
 		ret, _, _ = procStartService.Call(

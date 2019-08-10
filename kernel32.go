@@ -235,8 +235,8 @@ func CreateProcessA(lpApplicationName *string,
 	}
 
 	procCreateProcessA.Call(
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(*lpApplicationName))),
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(lpCommandLine))),
+		uintptr(pointerStringWithoutError(*lpApplicationName)),
+		uintptr(pointerStringWithoutError(lpCommandLine)),
 		uintptr(unsafe.Pointer(lpProcessAttributes)),
 		uintptr(unsafe.Pointer(lpThreadAttributes)),
 		uintptr(inherit),
@@ -293,7 +293,7 @@ func GetProcAddress(hProcess HANDLE, procname string) (addr uintptr, err error) 
 	if procname == "" {
 		pn = 0
 	} else {
-		pn = uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(procname)))
+		pn = uintptr(pointerStringWithoutError(procname))
 	}
 
 	ret, _, err := procGetProcAddress.Call(uintptr(hProcess), pn)
@@ -328,7 +328,7 @@ func GetModuleHandle(modulename string) HINSTANCE {
 	if modulename == "" {
 		mn = 0
 	} else {
-		mn = uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(modulename)))
+		mn = uintptr(pointerStringWithoutError(modulename))
 	}
 	ret, _, _ := procGetModuleHandle.Call(mn)
 	return HINSTANCE(ret)
@@ -601,7 +601,7 @@ func SetConsoleTextAttribute(hConsoleOutput HANDLE, wAttributes uint16) bool {
 func GetDiskFreeSpaceEx(dirName string) (r bool,
 	freeBytesAvailable, totalNumberOfBytes, totalNumberOfFreeBytes uint64) {
 	ret, _, _ := procGetDiskFreeSpaceEx.Call(
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(dirName))),
+		uintptr(pointerStringWithoutError(dirName)),
 		uintptr(unsafe.Pointer(&freeBytesAvailable)),
 		uintptr(unsafe.Pointer(&totalNumberOfBytes)),
 		uintptr(unsafe.Pointer(&totalNumberOfFreeBytes)))

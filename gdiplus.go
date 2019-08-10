@@ -104,7 +104,7 @@ var (
 func GdipCreateBitmapFromFile(filename string) (*uintptr, error) {
 	var bitmap *uintptr
 	ret, _, _ := procGdipCreateBitmapFromFile.Call(
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(filename))),
+		uintptr(pointerStringWithoutError(filename)),
 		uintptr(unsafe.Pointer(&bitmap)))
 
 	if ret != Ok {
