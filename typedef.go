@@ -1296,3 +1296,26 @@ type SYSTEM_INFO struct {
 	ProcessorLevel            uint16
 	ProcessorRevision         uint16
 }
+
+// PNOTIFYICONDATA Contains information that the system needs to display notifications in the notification area.
+// Used by Shell_NotifyIcon.
+// https://msdn.microsoft.com/en-us/library/windows/desktop/bb773352(v=vs.85).aspx
+// https://msdn.microsoft.com/en-us/library/windows/desktop/bb762159
+type PNOTIFYICONDATA struct {
+	Size            DWORD
+	Wnd             HANDLE
+	ID              uint32
+	Flags           uint32
+	CallbackMessage uint32
+	Icon            HICON
+	Tip             [128]uint16
+	State           DWORD
+	StateMask       DWORD
+	Info            [256]uint16
+	Timeout         uint32
+	Version         uint32
+	InfoTitle       [64]uint16
+	InfoFlags       DWORD
+	GuidItem        GUID
+	BalloonIcon     HICON
+}

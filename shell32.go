@@ -153,12 +153,11 @@ func ExtractIcon(lpszExeFileName string, nIconIndex int) HICON {
 	return HICON(ret)
 }
 
-// Shell_NotifyIconW Sends a message to the taskbar's status area.
-func Shell_NotifyIconW(dwMessage string, lpData int) bool {
+// ShellNotifyiconw Sends a message to the taskbar's status area.
+func ShellNotifyiconw(dwMessage DWORD, lpData PNOTIFYICONDATA) bool {
 	ret, _, _ := procShellNotifyIconW.Call(
-		0,
-		uintptr(pointerStringWithoutError(lpszExeFileName)),
-		uintptr(nIconIndex))
+		uintptr(dwMessage),
+		uintptr(unsafe.Pointer(&lpData)))
 
-	return bool(ret)
+	return ret != 0
 }
