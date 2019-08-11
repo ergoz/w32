@@ -154,6 +154,7 @@ var (
 	procLoadImageW                    = moduser32.NewProc("LoadImageW")
 	procSetMenuInfo                   = moduser32.NewProc("SetMenuInfo")
 	procInsertMenuItemW               = moduser32.NewProc("InsertMenuItemW")
+	procSetMenuItemInfoW              = moduser32.NewProc("SetMenuItemInfoW")
 )
 
 func SendMessageTimeout(hwnd HWND, msg uint32, wParam, lParam uintptr, fuFlags, uTimeout uint32, lpdwResult uintptr) uintptr {
@@ -1449,5 +1450,20 @@ func InsertMenuItem(hMenu HMENU, item uint32, fByPosition bool, lpmi MENUITEMINF
 		return false, err
 	}
 
+	return ret != 0, nil
+}
+
+// SetMenuItemInfo Changes information about a menu item.
+// See: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setmenuiteminfow
+func SetMenuItemInfo(hMenu HMENU, item uint32, fByPosition bool, lpmi MENUITEMINFOW) (bool, error) {
+	ret, _, err := procSetMenuItemInfoW.Call(
+		uintptr(hMenu),
+		uintptr(item),
+		uintptr(BoolToBOOL(fByPosition)),
+		uintptr(unsafe.Pointer(&lpmi)),
+	)
+	if !IsErrSuccess(err) {
+		return false, err
+	}
 	return ret != 0, nil
 }
