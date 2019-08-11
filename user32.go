@@ -150,6 +150,7 @@ var (
 	procDrawMenuBar                   = moduser32.NewProc("DrawMenuBar")
 	procTrackPopupMenuEx              = moduser32.NewProc("TrackPopupMenuEx")
 	procTrackPopupMenu                = moduser32.NewProc("TrackPopupMenu")
+	procSetMenuItemBitmaps            = moduser32.NewProc("SetMenuItemBitmaps")
 )
 
 func SendMessageTimeout(hwnd HWND, msg uint32, wParam, lParam uintptr, fuFlags, uTimeout uint32, lpdwResult uintptr) uintptr {
@@ -1377,6 +1378,23 @@ func TrackPopupMenuEx(hMenu HMENU, uFlags uint32, x int, y int, hWnd HWND, lptpm
 		uintptr(y),
 		uintptr(hWnd),
 		uintptr(unsafe.Pointer(lptpm)),
+	)
+	if !IsErrSuccess(err) {
+		return false, err
+	}
+	return ret != 0, nil
+}
+
+// SetMenuItemBitmaps Displays a shortcut menu at the specified location and tracks the selection of items on the
+// shortcut menu. The shortcut menu can appear anywhere on the screen.
+// See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setmenuitembitmaps
+func SetMenuItemBitmaps(hMenu HMENU, uPosition uint32, uFlags uint32, hBitmapUnchecked HBITMAP, hBitmapChecked HBITMAP) (bool, error) {
+	ret, _, err := procSetMenuItemBitmaps.Call(
+		uintptr(hMenu),
+		uintptr(uPosition),
+		uintptr(uFlags),
+		uintptr(hBitmapUnchecked),
+		uintptr(hBitmapChecked),
 	)
 	if !IsErrSuccess(err) {
 		return false, err
