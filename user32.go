@@ -142,6 +142,7 @@ var (
 	procCreatePopupMenu               = moduser32.NewProc("CreatePopupMenu")
 	procCreateMenu                    = moduser32.NewProc("CreateMenu")
 	procDestroyMenu                   = moduser32.NewProc("DestroyMenu")
+	procGetSubMenu                    = moduser32.NewProc("GetSubMenu")
 )
 
 func SendMessageTimeout(hwnd HWND, msg uint32, wParam, lParam uintptr, fuFlags, uTimeout uint32, lpdwResult uintptr) uintptr {
@@ -1318,9 +1319,19 @@ func CreateMenu() (HMENU, error) {
 // DestroyMenu Destroys the specified menu and frees any memory that the menu occupies.
 // See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-destroymenu
 func DestroyMenu(menu HMENU) (bool, error) {
-	ret, _, err := procDestroyMenu.Call()
+	ret, _, err := procDestroyMenu.Call(uintptr(menu))
 	if ret == 0 && err.(syscall.Errno) != ERROR_SUCCESS {
 		return false, err
 	}
 	return ret != 0, nil
+}
+
+// GetSubMenu Retrieves a handle to the drop-down menu or submenu activated by the specified menu item.
+// See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getsubmenu
+func GetSubMenu(menu HMENU, nPos int) (HMENU, error) {
+	ret, _, err := procGetSubMenu.Call(uintptr(menu), uintptr(nPos))
+	if ret == 0 && err.(syscall.Errno) != ERROR_SUCCESS {
+		return HMENU(nil), err
+	}
+	return HMENU(ret), nil
 }
