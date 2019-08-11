@@ -146,6 +146,7 @@ var (
 	procRegisterWindowMessageW        = moduser32.NewProc("RegisterWindowMessageW")
 	procGetMenuItemID                 = moduser32.NewProc("GetMenuItemID")
 	procDeleteMenu                    = moduser32.NewProc("DeleteMenu")
+	procAppendMenuW                   = moduser32.NewProc("AppendMenuW")
 )
 
 func SendMessageTimeout(hwnd HWND, msg uint32, wParam, lParam uintptr, fuFlags, uTimeout uint32, lpdwResult uintptr) uintptr {
@@ -1303,6 +1304,25 @@ func GetMenuItemID(hMenu HMENU, nPos int) (int32, error) {
 // See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-deletemenu
 func DeleteMenu(hMenu HMENU, uPosition uint, uFlags uint) (bool, error) {
 	ret, _, err := procDeleteMenu.Call(uintptr(hMenu), uintptr(uPosition), uintptr(uFlags))
+	if !IsErrSuccess(err) {
+		return false, err
+	}
+	return ret != 0, nil
+}
+
+// AppendMenu Appends a new item to the end of the specified menu bar, drop-down menu, submenu, or shortcut menu.
+// You can use this function to specify the content, appearance, and behavior of the menu item.
+//
+// uIDNewItem - The identifier of the new menu item or, if the *uFlags* parameter is set to **MF_POPUP**,
+// a handle to the drop-down menu or submenu.
+// See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-appendmenuw
+func AppendMenu(hMenu HMENU, uFlags uint, uIDNewItem uintptr, lpNewItem string) (bool, error) {
+	ret, _, err := procAppendMenuW.Call(
+		uintptr(hMenu),
+		uintptr(uFlags),
+		uIDNewItem,
+		uintptr(pointerStringWithoutError(lpNewItem)),
+	)
 	if !IsErrSuccess(err) {
 		return false, err
 	}
