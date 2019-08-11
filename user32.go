@@ -1294,6 +1294,5 @@ func GetMenuItemID(hMenu HMENU, nPos int) (int32, error) {
 	if err.(syscall.Errno) != ERROR_SUCCESS {
 		return -1, err
 	}
-
 	return int32(ret), nil
 }
