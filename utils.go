@@ -36,7 +36,6 @@ func BoolToBOOL(value bool) BOOL {
 	if value {
 		return 1
 	}
-
 	return 0
 }
 

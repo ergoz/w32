@@ -218,33 +218,38 @@ func VirtualProtect(lpAddress uintptr, dwSize int, flNewProtect int, lpflOldProt
 }
 
 // https://msdn.microsoft.com/en-us/library/windows/desktop/ms682425(v=vs.85).aspx
-func CreateProcessA(lpApplicationName *string,
+func CreateProcessA(lpApplicationName string,
 	lpCommandLine string,
 	lpProcessAttributes *syscall.SecurityAttributes,
 	lpThreadAttributes *syscall.SecurityAttributes,
 	bInheritHandles bool,
 	dwCreationFlags uint32,
-	lpEnvironment *string,
-	lpCurrentDirectory *uint16,
+	lpEnvironment string,
+	lpCurrentDirectory string,
 	lpStartupInfo *syscall.StartupInfo,
-	lpProcessInformation *syscall.ProcessInformation) {
+	lpProcessInformation *syscall.ProcessInformation) (bool, error) {
 
 	inherit := 0
 	if bInheritHandles {
 		inherit = 1
 	}
 
-	procCreateProcessA.Call(
-		uintptr(pointerStringWithoutError(*lpApplicationName)),
+	ret, _, err := procCreateProcessA.Call(
+		uintptr(pointerStringWithoutError(lpApplicationName)),
 		uintptr(pointerStringWithoutError(lpCommandLine)),
 		uintptr(unsafe.Pointer(lpProcessAttributes)),
 		uintptr(unsafe.Pointer(lpThreadAttributes)),
 		uintptr(inherit),
 		uintptr(dwCreationFlags),
-		uintptr(unsafe.Pointer(lpEnvironment)),
-		uintptr(unsafe.Pointer(lpCurrentDirectory)),
+		uintptr(pointerStringWithoutError(lpEnvironment)),
+		uintptr(pointerStringWithoutError(lpCurrentDirectory)),
 		uintptr(unsafe.Pointer(lpStartupInfo)),
 		uintptr(unsafe.Pointer(lpProcessInformation)))
+
+	if ret == 0 && err.(syscall.Errno) != ERROR_SUCCESS {
+		return false, err
+	}
+	return ret != 0, nil
 }
 
 // https://msdn.microsoft.com/en-us/library/windows/desktop/aa366890(v=vs.85).aspx
@@ -367,16 +372,16 @@ func GetUserDefaultLCID() uint32 {
 	return uint32(ret)
 }
 
-func Lstrlen(lpString *uint16) int {
-	ret, _, _ := procLstrlen.Call(uintptr(unsafe.Pointer(lpString)))
+func Lstrlen(lpString string) int {
+	ret, _, _ := procLstrlen.Call(uintptr(pointerStringWithoutError(lpString)))
 
 	return int(ret)
 }
 
-func Lstrcpy(buf []uint16, lpString *uint16) {
+func Lstrcpy(buf []uint16, lpString string) {
 	procLstrcpy.Call(
 		uintptr(unsafe.Pointer(&buf[0])),
-		uintptr(unsafe.Pointer(lpString)))
+		uintptr(pointerStringWithoutError(lpString)))
 }
 
 func GlobalAlloc(uFlags uint, dwBytes uint32) HGLOBAL {
@@ -422,11 +427,11 @@ func MoveMemory(destination, source unsafe.Pointer, length uint32) {
 		uintptr(length))
 }
 
-func FindResource(hModule HMODULE, lpName, lpType *uint16) (HRSRC, error) {
+func FindResource(hModule HMODULE, lpName, lpType string) (HRSRC, error) {
 	ret, _, _ := procFindResource.Call(
 		uintptr(hModule),
-		uintptr(unsafe.Pointer(lpName)),
-		uintptr(unsafe.Pointer(lpType)))
+		uintptr(pointerStringWithoutError(lpName)),
+		uintptr(pointerStringWithoutError(lpType)))
 
 	if ret == 0 {
 		return 0, syscall.GetLastError()

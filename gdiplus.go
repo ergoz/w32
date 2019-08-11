@@ -86,6 +86,9 @@ func GetGpStatus(s int32) string {
 	return "Unknown Status Value"
 }
 
+// TODO REFACTOR THIS LIBRARY
+// TODO See https://docs.microsoft.com/en-us/windows/win32/gdiplus/-gdiplus-func-functions
+
 var (
 	token uintptr
 
@@ -114,6 +117,7 @@ func GdipCreateBitmapFromFile(filename string) (*uintptr, error) {
 	return bitmap, nil
 }
 
+// todo fix this method!
 func GdipCreateBitmapFromResource(instance HINSTANCE, resId *uint16) (*uintptr, error) {
 	var bitmap *uintptr
 	ret, _, _ := procGdipCreateBitmapFromResource.Call(

@@ -179,81 +179,55 @@ func SetForegroundWindow(hwnd HWND) bool {
 }
 
 // https://github.com/AllenDang/w32/pull/62/commits/bf59645b86663a54dffb94ca82683cc0610a6de3
-func FindWindowExW(hwndParent, hwndChildAfter HWND, className, windowName *uint16) HWND {
+func FindWindowExW(hWndParent, hWndChildAfter HWND, lpszClass, lpszWindow string) HWND {
 	ret, _, _ := procFindWindowExW.Call(
-		uintptr(hwndParent),
-		uintptr(hwndChildAfter),
-		uintptr(unsafe.Pointer(className)),
-		uintptr(unsafe.Pointer(windowName)))
+		uintptr(hWndParent),
+		uintptr(hWndChildAfter),
+		uintptr(pointerStringWithoutError(lpszClass)),
+		uintptr(pointerStringWithoutError(lpszWindow)))
 
 	return HWND(ret)
-}
-
-func FindWindowExS(hwndParent, hwndChildAfter HWND, className, windowName *string) HWND {
-	var class *uint16 = nil
-	if className != nil {
-		class, _ = syscall.UTF16PtrFromString(*className)
-	}
-	var window *uint16 = nil
-	if windowName != nil {
-		window, _ = syscall.UTF16PtrFromString(*windowName)
-	}
-	return FindWindowExW(hwndParent, hwndChildAfter, class, window)
 }
 
 // https://github.com/AllenDang/w32/pull/62/commits/bf59645b86663a54dffb94ca82683cc0610a6de3
-func FindWindowW(className, windowName *uint16) HWND {
+func FindWindowW(lpClassName, lpWindowName string) HWND {
 	ret, _, _ := procFindWindowW.Call(
-		uintptr(unsafe.Pointer(className)),
-		uintptr(unsafe.Pointer(windowName)))
+		uintptr(pointerStringWithoutError(lpClassName)),
+		uintptr(pointerStringWithoutError(lpWindowName)))
 
 	return HWND(ret)
-}
-
-func FindWindowS(className, windowName *string) HWND {
-	var class *uint16 = nil
-	if className != nil {
-		class, _ = syscall.UTF16PtrFromString(*className)
-	}
-	var window *uint16 = nil
-	if windowName != nil {
-		window, _ = syscall.UTF16PtrFromString(*windowName)
-	}
-	return FindWindowW(class, window)
 }
 
 // https://github.com/AllenDang/w32/pull/62/commits/bf59645b86663a54dffb94ca82683cc0610a6de3
 func EnumChildWindows(hWndParent HWND, lpEnumFunc WNDENUMPROC, lParam LPARAM) bool {
 	ret, _, _ := procEnumChildWindows.Call(
 		uintptr(hWndParent),
-		uintptr(syscall.NewCallback(lpEnumFunc)),
+		syscall.NewCallback(lpEnumFunc),
 		uintptr(lParam),
 	)
 
 	return ret != 0
 }
 
-func GetWindowTextW(hwnd syscall.Handle, str *uint16, maxCount int32) (len int32, err error) {
-	r0, _, e1 := syscall.Syscall(procGetWindowTextW.Addr(), 3, uintptr(hwnd), uintptr(unsafe.Pointer(str)), uintptr(maxCount))
-	len = int32(r0)
+func GetWindowTextW(hwnd syscall.Handle, str string, maxCount int32) (int32, error) {
+	r0, _, e1 := procGetWindowTextW.Call(uintptr(hwnd), uintptr(pointerStringWithoutError(str)), uintptr(maxCount))
+	len := int32(r0)
 	if len == 0 {
-		if e1 != 0 {
-			err = error(e1)
+		if !IsErrSuccess(e1) {
+			return 0, e1
 		} else {
-			err = syscall.EINVAL
+			return 0, syscall.EINVAL
 		}
 	}
-	return
+	return len, nil
 }
 
-func GetForegroundWindow() (hwnd syscall.Handle, err error) {
-	r0, _, e1 := syscall.Syscall(procGetForegroundWindow.Addr(), 0, 0, 0, 0)
-	if e1 != 0 {
-		err = error(e1)
-		return
+func GetForegroundWindow() (HWND, error) {
+	r0, _, e1 := procGetForegroundWindow.Call()
+	if !IsErrSuccess(e1) {
+		return HWND(nil), e1
 	}
-	hwnd = syscall.Handle(r0)
-	return
+	return HWND(r0), nil
 }
 
 func RegisterClassEx(wndClassEx *WNDCLASSEX) ATOM {
@@ -261,38 +235,22 @@ func RegisterClassEx(wndClassEx *WNDCLASSEX) ATOM {
 	return ATOM(ret)
 }
 
-func LoadIcon(instance HINSTANCE, iconName *uint16) HICON {
+func LoadIcon(instance HINSTANCE, iconName string) HICON {
 	ret, _, _ := procLoadIcon.Call(
 		uintptr(instance),
-		uintptr(unsafe.Pointer(iconName)))
+		uintptr(pointerStringWithoutError(iconName)))
 
 	return HICON(ret)
 
 }
 
-func LoadIconS(instance HINSTANCE, iconName *string) HICON {
-	var icon *uint16 = nil
-	if iconName != nil {
-		icon, _ = syscall.UTF16PtrFromString(*iconName)
-	}
-	return LoadIcon(instance, icon)
-}
-
-func LoadCursor(instance HINSTANCE, cursorName *uint16) HCURSOR {
+func LoadCursor(instance HINSTANCE, cursorName string) HCURSOR {
 	ret, _, _ := procLoadCursor.Call(
 		uintptr(instance),
-		uintptr(unsafe.Pointer(cursorName)))
+		uintptr(pointerStringWithoutError(cursorName)))
 
 	return HCURSOR(ret)
 
-}
-
-func LoadCursorS(instance HINSTANCE, cursorName *string) HCURSOR {
-	var cursor *uint16 = nil
-	if cursorName != nil {
-		cursor, _ = syscall.UTF16PtrFromString(*cursorName)
-	}
-	return LoadCursor(instance, cursor)
 }
 
 func ShowWindow(hwnd HWND, cmdshow int) bool {
@@ -310,13 +268,13 @@ func UpdateWindow(hwnd HWND) bool {
 	return ret != 0
 }
 
-func CreateWindowEx(exStyle uint, className, windowName *uint16,
+func CreateWindowEx(exStyle uint, className, windowName string,
 	style uint, x, y, width, height int, parent HWND, menu HMENU,
 	instance HINSTANCE, param unsafe.Pointer) HWND {
 	ret, _, _ := procCreateWindowEx.Call(
 		uintptr(exStyle),
-		uintptr(unsafe.Pointer(className)),
-		uintptr(unsafe.Pointer(windowName)),
+		uintptr(pointerStringWithoutError(className)),
+		uintptr(pointerStringWithoutError(windowName)),
 		uintptr(style),
 		uintptr(x),
 		uintptr(y),
@@ -328,33 +286,6 @@ func CreateWindowEx(exStyle uint, className, windowName *uint16,
 		uintptr(param))
 
 	return HWND(ret)
-}
-
-func CreateWindowExS(exStyle uint, className, windowName *string,
-	style uint, x, y, width, height int, parent HWND, menu HMENU,
-	instance HINSTANCE, param unsafe.Pointer) HWND {
-	var class *uint16 = nil
-	if className != nil {
-		class, _ = syscall.UTF16PtrFromString(*className)
-	}
-	var window *uint16 = nil
-	if windowName != nil {
-		window, _ = syscall.UTF16PtrFromString(*windowName)
-	}
-	return CreateWindowEx(
-		exStyle,
-		class,
-		window,
-		style,
-		x,
-		y,
-		width,
-		height,
-		parent,
-		menu,
-		instance,
-		param,
-	)
 }
 
 func AdjustWindowRectEx(rect *RECT, style uint, menu bool, exStyle uint) bool {
@@ -759,10 +690,10 @@ func UnionRect(dst, src1, src2 *RECT) bool {
 	return ret != 0
 }
 
-func CreateDialog(hInstance HINSTANCE, lpTemplate *uint16, hWndParent HWND, lpDialogProc uintptr) HWND {
+func CreateDialog(hInstance HINSTANCE, lpTemplate string, hWndParent HWND, lpDialogProc uintptr) HWND {
 	ret, _, _ := procCreateDialogParam.Call(
 		uintptr(hInstance),
-		uintptr(unsafe.Pointer(lpTemplate)),
+		uintptr(pointerStringWithoutError(lpTemplate)),
 		uintptr(hWndParent),
 		lpDialogProc,
 		0)
@@ -770,10 +701,10 @@ func CreateDialog(hInstance HINSTANCE, lpTemplate *uint16, hWndParent HWND, lpDi
 	return HWND(ret)
 }
 
-func DialogBox(hInstance HINSTANCE, lpTemplateName *uint16, hWndParent HWND, lpDialogProc uintptr) int {
+func DialogBox(hInstance HINSTANCE, lpTemplateName string, hWndParent HWND, lpDialogProc uintptr) int {
 	ret, _, _ := procDialogBoxParam.Call(
 		uintptr(hInstance),
-		uintptr(unsafe.Pointer(lpTemplateName)),
+		uintptr(pointerStringWithoutError(lpTemplateName)),
 		uintptr(hWndParent),
 		lpDialogProc,
 		0)
@@ -993,14 +924,16 @@ func GetKeyState(vKey int) (keyState uint16) {
 	return uint16(ret)
 }
 
-func ToAscii(uVirtKey, uScanCode uint, lpKeyState *byte, lpChar *uint16, uFlags uint) int {
+func ToAscii(uVirtKey, uScanCode uint, lpKeyState *byte, uFlags uint) (string, int) {
+	var lpCharLP *uint16
 	ret, _, _ := procToAscii.Call(
 		uintptr(uVirtKey),
 		uintptr(uScanCode),
 		uintptr(unsafe.Pointer(lpKeyState)),
-		uintptr(unsafe.Pointer(lpChar)),
+		uintptr(unsafe.Pointer(lpCharLP)),
 		uintptr(uFlags))
-	return int(ret)
+
+	return UTF16PtrToString(lpCharLP), int(ret)
 }
 
 func SwapMouseButton(fSwap bool) bool {
@@ -1093,9 +1026,9 @@ func EnumDisplayMonitors(hdc HDC, clip *RECT, fnEnum, dwData uintptr) bool {
 	return ret != 0
 }
 
-func EnumDisplaySettingsEx(szDeviceName *uint16, iModeNum uint32, devMode *DEVMODE, dwFlags uint32) bool {
+func EnumDisplaySettingsEx(szDeviceName string, iModeNum uint32, devMode *DEVMODE, dwFlags uint32) bool {
 	ret, _, _ := procEnumDisplaySettingsEx.Call(
-		uintptr(unsafe.Pointer(szDeviceName)),
+		uintptr(pointerStringWithoutError(szDeviceName)),
 		uintptr(iModeNum),
 		uintptr(unsafe.Pointer(devMode)),
 		uintptr(dwFlags),
@@ -1103,9 +1036,9 @@ func EnumDisplaySettingsEx(szDeviceName *uint16, iModeNum uint32, devMode *DEVMO
 	return ret != 0
 }
 
-func ChangeDisplaySettingsEx(szDeviceName *uint16, devMode *DEVMODE, hwnd HWND, dwFlags uint32, lParam uintptr) int32 {
+func ChangeDisplaySettingsEx(szDeviceName string, devMode *DEVMODE, hwnd HWND, dwFlags uint32, lParam uintptr) int32 {
 	ret, _, _ := procChangeDisplaySettingsEx.Call(
-		uintptr(unsafe.Pointer(szDeviceName)),
+		uintptr(pointerStringWithoutError(szDeviceName)),
 		uintptr(unsafe.Pointer(devMode)),
 		uintptr(hwnd),
 		uintptr(dwFlags),

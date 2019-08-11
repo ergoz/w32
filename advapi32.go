@@ -30,7 +30,7 @@ var (
 	procRegDeleteTree                = modadvapi32.NewProc("RegDeleteTreeW")
 	procRegDeleteValue               = modadvapi32.NewProc("RegDeleteValueW")
 	procRegEnumKeyEx                 = modadvapi32.NewProc("RegEnumKeyExW")
-	procRegGetValue                  = modadvapi32.NewProc("RegGetValueW")
+	procRegGetValueW                 = modadvapi32.NewProc("RegGetValueW")
 	procRegOpenKeyEx                 = modadvapi32.NewProc("RegOpenKeyExW")
 	procRegSetValueEx                = modadvapi32.NewProc("RegSetValueExW")
 	procSetSecurityDescriptorDacl    = modadvapi32.NewProc("SetSecurityDescriptorDacl")
@@ -117,7 +117,7 @@ func InitializeSecurityDescriptor(rev uint16) (pSecurityDescriptor *SECURITY_DES
 
 func RegCreateKey(hKey HKEY, subKey string) HKEY {
 	var result HKEY
-	ret, _, _ := procRegCreateKeyEx.Call(
+	_, _, _ = procRegCreateKeyEx.Call(
 		uintptr(hKey),
 		uintptr(pointerStringWithoutError(subKey)),
 		uintptr(0),
@@ -127,10 +127,11 @@ func RegCreateKey(hKey HKEY, subKey string) HKEY {
 		uintptr(0),
 		uintptr(unsafe.Pointer(&result)),
 		uintptr(0))
-	_ = ret
+
 	return result
 }
 
+// TODO Validate this method!!! may be deprecated parts used
 func RegOpenKeyEx(hKey HKEY, subKey string, samDesired uint32) HKEY {
 	var result HKEY
 	ret, _, _ := procRegOpenKeyEx.Call(
@@ -163,7 +164,7 @@ func RegGetRaw(hKey HKEY, subKey string, value string) []byte {
 	if len(value) > 0 {
 		valptr = pointerStringWithoutError(value)
 	}
-	procRegGetValue.Call(
+	procRegGetValueW.Call(
 		uintptr(hKey),
 		uintptr(pointerStringWithoutError(subKey)),
 		uintptr(valptr),
@@ -177,7 +178,7 @@ func RegGetRaw(hKey HKEY, subKey string, value string) []byte {
 	}
 
 	buf := make([]byte, bufLen)
-	ret, _, _ := procRegGetValue.Call(
+	ret, _, _ := procRegGetValueW.Call(
 		uintptr(hKey),
 		uintptr(pointerStringWithoutError(subKey)),
 		uintptr(valptr),
@@ -255,7 +256,7 @@ func RegSetUint32(hKey HKEY, subKey string, value uint32) (errno int) {
 
 func RegGetString(hKey HKEY, subKey string, value string) string {
 	var bufLen uint32
-	procRegGetValue.Call(
+	procRegGetValueW.Call(
 		uintptr(hKey),
 		uintptr(pointerStringWithoutError(subKey)),
 		uintptr(pointerStringWithoutError(value)),
@@ -269,7 +270,7 @@ func RegGetString(hKey HKEY, subKey string, value string) string {
 	}
 
 	buf := make([]uint16, bufLen)
-	ret, _, _ := procRegGetValue.Call(
+	ret, _, _ := procRegGetValueW.Call(
 		uintptr(hKey),
 		uintptr(pointerStringWithoutError(subKey)),
 		uintptr(pointerStringWithoutError(value)),
@@ -287,7 +288,7 @@ func RegGetString(hKey HKEY, subKey string, value string) string {
 
 func RegGetUint32(hKey HKEY, subKey string, value string) (data uint32, errno int) {
 	var dataLen uint32 = uint32(unsafe.Sizeof(data))
-	ret, _, _ := procRegGetValue.Call(
+	ret, _, _ := procRegGetValueW.Call(
 		uintptr(hKey),
 		uintptr(pointerStringWithoutError(subKey)),
 		uintptr(pointerStringWithoutError(value)),

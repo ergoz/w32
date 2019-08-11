@@ -20,7 +20,7 @@ var (
 	procCreateBrushIndirect       = modgdi32.NewProc("CreateBrushIndirect")
 	procCreateCompatibleBitmap    = modgdi32.NewProc("CreateCompatibleBitmap")
 	procCreateCompatibleDC        = modgdi32.NewProc("CreateCompatibleDC")
-	procCreateDC                  = modgdi32.NewProc("CreateDCW")
+	procCreateDCW                 = modgdi32.NewProc("CreateDCW")
 	procCreateDIBSection          = modgdi32.NewProc("CreateDIBSection")
 	procCreateEnhMetaFile         = modgdi32.NewProc("CreateEnhMetaFileW")
 	procCreateFontIndirect        = modgdi32.NewProc("CreateFontIndirectW")
@@ -148,10 +148,10 @@ func CloseEnhMetaFile(hdc HDC) HENHMETAFILE {
 	return HENHMETAFILE(ret)
 }
 
-func CopyEnhMetaFile(hemfSrc HENHMETAFILE, lpszFile *uint16) HENHMETAFILE {
+func CopyEnhMetaFile(hEnh HENHMETAFILE, lpFileName string) HENHMETAFILE {
 	ret, _, _ := procCopyEnhMetaFile.Call(
-		uintptr(hemfSrc),
-		uintptr(unsafe.Pointer(lpszFile)))
+		uintptr(hEnh),
+		uintptr(pointerStringWithoutError(lpFileName)))
 
 	return HENHMETAFILE(ret)
 }
@@ -174,12 +174,12 @@ func CreateCompatibleDC(hdc HDC) HDC {
 	return HDC(ret)
 }
 
-func CreateDC(lpszDriver, lpszDevice, lpszOutput *uint16, lpInitData *DEVMODE) HDC {
-	ret, _, _ := procCreateDC.Call(
-		uintptr(unsafe.Pointer(lpszDriver)),
-		uintptr(unsafe.Pointer(lpszDevice)),
-		uintptr(unsafe.Pointer(lpszOutput)),
-		uintptr(unsafe.Pointer(lpInitData)))
+func CreateDC(pwszDriver, pwszDevice, pszPort string, pdm *DEVMODE) HDC {
+	ret, _, _ := procCreateDCW.Call(
+		uintptr(pointerStringWithoutError(pwszDriver)),
+		uintptr(pointerStringWithoutError(pwszDevice)),
+		uintptr(pointerStringWithoutError(pszPort)),
+		uintptr(unsafe.Pointer(pdm)))
 
 	return HDC(ret)
 }
@@ -196,30 +196,28 @@ func CreateDIBSection(hdc HDC, pbmi *BITMAPINFO, iUsage uint, ppvBits *unsafe.Po
 	return HBITMAP(ret)
 }
 
-func CreateEnhMetaFile(hdcRef HDC, lpFilename *uint16, lpRect *RECT, lpDescription *uint16) HDC {
+func CreateEnhMetaFile(hdc HDC, lpFilename string, lprc *RECT, lpDesc string) HDC {
 	ret, _, _ := procCreateEnhMetaFile.Call(
-		uintptr(hdcRef),
-		uintptr(unsafe.Pointer(lpFilename)),
-		uintptr(unsafe.Pointer(lpRect)),
-		uintptr(unsafe.Pointer(lpDescription)))
+		uintptr(hdc),
+		uintptr(pointerStringWithoutError(lpFilename)),
+		uintptr(unsafe.Pointer(lprc)),
+		uintptr(pointerStringWithoutError(lpDesc)))
 
 	return HDC(ret)
 }
 
-func CreateIC(lpszDriver, lpszDevice, lpszOutput *uint16, lpdvmInit *DEVMODE) HDC {
+func CreateIC(pszDriver, pszDevice string, pdm *DEVMODE) HDC {
 	ret, _, _ := procCreateIC.Call(
-		uintptr(unsafe.Pointer(lpszDriver)),
-		uintptr(unsafe.Pointer(lpszDevice)),
-		uintptr(unsafe.Pointer(lpszOutput)),
-		uintptr(unsafe.Pointer(lpdvmInit)))
+		uintptr(pointerStringWithoutError(pszDriver)),
+		uintptr(pointerStringWithoutError(pszDevice)),
+		uintptr(nil),
+		uintptr(unsafe.Pointer(pdm)))
 
 	return HDC(ret)
 }
 
 func DeleteDC(hdc HDC) bool {
-	ret, _, _ := procDeleteDC.Call(
-		uintptr(hdc))
-
+	ret, _, _ := procDeleteDC.Call(uintptr(hdc))
 	return ret != 0
 }
 
@@ -266,9 +264,9 @@ func ExtCreatePen(dwPenStyle, dwWidth uint, lplb *LOGBRUSH, dwStyleCount uint, l
 	return HPEN(ret)
 }
 
-func GetEnhMetaFile(lpszMetaFile *uint16) HENHMETAFILE {
+func GetEnhMetaFile(lpName string) HENHMETAFILE {
 	ret, _, _ := procGetEnhMetaFile.Call(
-		uintptr(unsafe.Pointer(lpszMetaFile)))
+		uintptr(pointerStringWithoutError(lpName)))
 
 	return HENHMETAFILE(ret)
 }
@@ -298,25 +296,25 @@ func GetStockObject(fnObject int) HGDIOBJ {
 	return HGDIOBJ(ret)
 }
 
-func GetTextExtentExPoint(hdc HDC, lpszStr *uint16, cchString, nMaxExtent int, lpnFit, alpDx *int, lpSize *SIZE) bool {
+func GetTextExtentExPoint(hdc HDC, lpszString string, cchString, nMaxExtent int, lpnFit, lpnDx *int, lpSize *SIZE) bool {
 	ret, _, _ := procGetTextExtentExPoint.Call(
 		uintptr(hdc),
-		uintptr(unsafe.Pointer(lpszStr)),
+		uintptr(pointerStringWithoutError(lpszString)),
 		uintptr(cchString),
 		uintptr(nMaxExtent),
 		uintptr(unsafe.Pointer(lpnFit)),
-		uintptr(unsafe.Pointer(alpDx)),
+		uintptr(unsafe.Pointer(lpnDx)),
 		uintptr(unsafe.Pointer(lpSize)))
 
 	return ret != 0
 }
 
-func GetTextExtentPoint32(hdc HDC, lpString *uint16, c int, lpSize *SIZE) bool {
+func GetTextExtentPoint32(hdc HDC, lpString string, c int, psizl *SIZE) bool {
 	ret, _, _ := procGetTextExtentPoint32.Call(
 		uintptr(hdc),
-		uintptr(unsafe.Pointer(lpString)),
+		uintptr(pointerStringWithoutError(lpString)),
 		uintptr(c),
-		uintptr(unsafe.Pointer(lpSize)))
+		uintptr(unsafe.Pointer(psizl)))
 
 	return ret != 0
 }
