@@ -153,6 +153,7 @@ var (
 	procSetMenuItemBitmaps            = moduser32.NewProc("SetMenuItemBitmaps")
 	procLoadImageW                    = moduser32.NewProc("LoadImageW")
 	procSetMenuInfo                   = moduser32.NewProc("SetMenuInfo")
+	procInsertMenuItemW               = moduser32.NewProc("InsertMenuItemW")
 )
 
 func SendMessageTimeout(hwnd HWND, msg uint32, wParam, lParam uintptr, fuFlags, uTimeout uint32, lpdwResult uintptr) uintptr {
@@ -1406,7 +1407,7 @@ func SetMenuItemBitmaps(hMenu HMENU, uPosition uint32, uFlags uint32, hBitmapUnc
 
 // LoadImageW Loads an icon, cursor, animated cursor, or bitmap.
 // See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-loadimagew
-func LoadImageW(hInst HINSTANCE, name string, ltype uint32, cx int, cy int, fuLoad uint32) (HANDLE, error) {
+func LoadImage(hInst HINSTANCE, name string, ltype uint32, cx int, cy int, fuLoad uint32) (HANDLE, error) {
 	ret, _, err := procLoadImageW.Call(
 		uintptr(hInst),
 		uintptr(pointerStringWithoutError(name)),
@@ -1427,6 +1428,22 @@ func SetMenuInfo(hMenu HMENU, menuInfo MENUINFO) (bool, error) {
 	ret, _, err := procSetMenuInfo.Call(
 		uintptr(hMenu),
 		uintptr(unsafe.Pointer(&menuInfo)),
+	)
+	if !IsErrSuccess(err) {
+		return false, err
+	}
+
+	return ret != 0, nil
+}
+
+// InsertMenuItemW Inserts a new menu item at the specified position in a menu.
+// https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-insertmenuitemw
+func InsertMenuItem(hMenu HMENU, item uint32, fByPosition bool, lpmi MENUITEMINFOW) (bool, error) {
+	ret, _, err := procInsertMenuItemW.Call(
+		uintptr(hMenu),
+		uintptr(item),
+		uintptr(BoolToBOOL(fByPosition)),
+		uintptr(unsafe.Pointer(&lpmi)),
 	)
 	if !IsErrSuccess(err) {
 		return false, err

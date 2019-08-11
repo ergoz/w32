@@ -1381,3 +1381,18 @@ type MENUINFO struct {
 	ContextHelpID DWORD
 	MenuData      uintptr
 }
+
+type MENUITEMINFOW struct {
+	Size          uint32
+	Mask          uint32
+	Type          uint32
+	State         uint32
+	ID            uint32
+	hSubMenu      HMENU
+	hbmpChecked   HBITMAP
+	hbmpUnchecked HBITMAP
+	ItemData      uintptr
+	TypeData      *uint16
+	cch           uint32
+	hbmpItem      HBITMAP
+}

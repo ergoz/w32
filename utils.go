@@ -242,12 +242,17 @@ func IsErrSuccess(err error) bool {
 	return false
 }
 
-func pointerStringWithError(data string) (unsafe.Pointer, error) {
+func pointerString(data string) (unsafe.Pointer, error) {
 	pp, err := syscall.UTF16PtrFromString(data)
 	return unsafe.Pointer(pp), err
 }
 
 func pointerStringWithoutError(data string) unsafe.Pointer {
 	pp, _ := syscall.UTF16PtrFromString(data)
-	return unsafe.Pointer(pp)
+	return pp
+}
+
+func StringToPointerWithoutError(data string) *uint16 {
+	pp, _ := syscall.UTF16PtrFromString(data)
+	return pp
 }
