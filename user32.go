@@ -144,6 +144,7 @@ var (
 	procDestroyMenu                   = moduser32.NewProc("DestroyMenu")
 	procGetSubMenu                    = moduser32.NewProc("GetSubMenu")
 	procRegisterWindowMessageW        = moduser32.NewProc("RegisterWindowMessageW")
+	procGetMenuItemID                 = moduser32.NewProc("GetMenuItemID")
 )
 
 func SendMessageTimeout(hwnd HWND, msg uint32, wParam, lParam uintptr, fuFlags, uTimeout uint32, lpdwResult uintptr) uintptr {
@@ -1284,4 +1285,15 @@ func RegisterWindowMessage(lpString string) (bool, error) {
 		return false, err
 	}
 	return ret != 0, nil
+}
+
+// GetMenuItemID Retrieves the menu item identifier of a menu item located at the specified position in a menu.
+// See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getmenuitemid
+func GetMenuItemID(hMenu HMENU, nPos int) (int32, error) {
+	ret, _, err := procGetMenuItemID.Call(uintptr(hMenu), uintptr(nPos))
+	if err.(syscall.Errno) != ERROR_SUCCESS {
+		return -1, err
+	}
+
+	return int32(ret), nil
 }
