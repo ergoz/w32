@@ -46,9 +46,9 @@ For more examples, look at the example folder.
 Setup
 =====
 
-1. [Install Go](https://golang.org/dl/). I recommend 32bit aka i386 due to GCC 64bit issues on windows.
+1. [Install Go](https://golang.org/dl/).
 2. Get a GCC compiler. I recommend the [WinBuilds version](http://win-builds.org/doku.php/download_and_installation_from_windows).
-3. From the command line, type `go get github.com/JamesHovious/w32`
+3. From the command line, type `go get github.com/riftbit/w32`
 4. Create a new file, and try the example above.
 
 Contribute

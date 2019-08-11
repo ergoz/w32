@@ -151,6 +151,7 @@ var (
 	procTrackPopupMenuEx              = moduser32.NewProc("TrackPopupMenuEx")
 	procTrackPopupMenu                = moduser32.NewProc("TrackPopupMenu")
 	procSetMenuItemBitmaps            = moduser32.NewProc("SetMenuItemBitmaps")
+	procLoadImageW                    = moduser32.NewProc("LoadImageW")
 )
 
 func SendMessageTimeout(hwnd HWND, msg uint32, wParam, lParam uintptr, fuFlags, uTimeout uint32, lpdwResult uintptr) uintptr {
@@ -1400,4 +1401,21 @@ func SetMenuItemBitmaps(hMenu HMENU, uPosition uint32, uFlags uint32, hBitmapUnc
 		return false, err
 	}
 	return ret != 0, nil
+}
+
+// LoadImageW Loads an icon, cursor, animated cursor, or bitmap.
+// See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-loadimagew
+func LoadImageW(hInst HINSTANCE, name string, ltype uint32, cx int, cy int, fuLoad uint32) (HANDLE, error) {
+	ret, _, err := procLoadImageW.Call(
+		uintptr(hInst),
+		uintptr(pointerStringWithoutError(name)),
+		uintptr(ltype),
+		uintptr(cx),
+		uintptr(cy),
+		uintptr(fuLoad),
+	)
+	if !IsErrSuccess(err) {
+		return HANDLE(nil), err
+	}
+	return HANDLE(ret), nil
 }
