@@ -1366,3 +1366,8 @@ type PNOTIFYICONDATA struct {
 	GuidItem        GUID
 	BalloonIcon     HICON
 }
+
+type TPMPARAMS struct {
+	cbSize    uint
+	rcExclude RECT
+}

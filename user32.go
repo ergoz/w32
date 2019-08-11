@@ -148,6 +148,8 @@ var (
 	procDeleteMenu                    = moduser32.NewProc("DeleteMenu")
 	procAppendMenuW                   = moduser32.NewProc("AppendMenuW")
 	procDrawMenuBar                   = moduser32.NewProc("DrawMenuBar")
+	procTrackPopupMenuEx              = moduser32.NewProc("TrackPopupMenuEx")
+	procTrackPopupMenu                = moduser32.NewProc("TrackPopupMenu")
 )
 
 func SendMessageTimeout(hwnd HWND, msg uint32, wParam, lParam uintptr, fuFlags, uTimeout uint32, lpdwResult uintptr) uintptr {
@@ -1336,6 +1338,45 @@ func AppendMenu(hMenu HMENU, uFlags uint, uIDNewItem uintptr, lpNewItem string) 
 func DrawMenuBar(hWnd HWND) (bool, error) {
 	ret, _, err := procDrawMenuBar.Call(
 		uintptr(hWnd),
+	)
+	if !IsErrSuccess(err) {
+		return false, err
+	}
+	return ret != 0, nil
+}
+
+// TrackPopupMenu Displays a shortcut menu at the specified location and tracks the selection of items on the menu.
+// The shortcut menu can appear anywhere on the screen.
+//
+// TPM_RETURNCMD is not supported, dont use this flag
+// See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-trackpopupmenu
+func TrackPopupMenu(hMenu HMENU, uFlags uint32, x int, y int, nReserved int, hWnd HWND, prcRect *RECT) (bool, error) {
+	ret, _, err := procTrackPopupMenu.Call(
+		uintptr(hMenu),
+		uintptr(uFlags),
+		uintptr(x),
+		uintptr(y),
+		uintptr(nReserved),
+		uintptr(hWnd),
+		uintptr(unsafe.Pointer(prcRect)),
+	)
+	if !IsErrSuccess(err) {
+		return false, err
+	}
+	return ret != 0, nil
+}
+
+// TrackPopupMenuEx Displays a shortcut menu at the specified location and tracks the selection of items on the
+// shortcut menu. The shortcut menu can appear anywhere on the screen.
+// See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-trackpopupmenuex
+func TrackPopupMenuEx(hMenu HMENU, uFlags uint32, x int, y int, hWnd HWND, lptpm *TPMPARAMS) (bool, error) {
+	ret, _, err := procTrackPopupMenuEx.Call(
+		uintptr(hMenu),
+		uintptr(uFlags),
+		uintptr(x),
+		uintptr(y),
+		uintptr(hWnd),
+		uintptr(unsafe.Pointer(lptpm)),
 	)
 	if !IsErrSuccess(err) {
 		return false, err
