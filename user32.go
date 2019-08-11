@@ -1302,7 +1302,7 @@ func GetMenuItemID(hMenu HMENU, nPos int) (int32, error) {
 // destroys the handle to the menu or submenu and frees the memory used by the menu or submenu.
 // See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-deletemenu
 func DeleteMenu(hMenu HMENU, uPosition uint, uFlags uint) (bool, error) {
-	ret, _, err := procGetMenuItemID.Call(uintptr(hMenu), uintptr(uPosition), uintptr(uFlags))
+	ret, _, err := procDeleteMenu.Call(uintptr(hMenu), uintptr(uPosition), uintptr(uFlags))
 	if !IsErrSuccess(err) {
 		return false, err
 	}
