@@ -141,6 +141,7 @@ var (
 	procUnregisterClassW              = moduser32.NewProc("UnregisterClassW")
 	procCreatePopupMenu               = moduser32.NewProc("CreatePopupMenu")
 	procCreateMenu                    = moduser32.NewProc("CreateMenu")
+	procDestroyMenu                   = moduser32.NewProc("DestroyMenu")
 )
 
 func SendMessageTimeout(hwnd HWND, msg uint32, wParam, lParam uintptr, fuFlags, uTimeout uint32, lpdwResult uintptr) uintptr {
@@ -1297,11 +1298,9 @@ func UnregisterClassW(lpClassName string, hInstance HINSTANCE) bool {
 // See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-createpopupmenu
 func CreatePopupMenu() (HMENU, error) {
 	ret, _, err := procCreatePopupMenu.Call()
-
 	if ret == 0 && err.(syscall.Errno) != ERROR_SUCCESS {
 		return HMENU(ret), err
 	}
-
 	return HMENU(ret), nil
 }
 
@@ -1310,10 +1309,18 @@ func CreatePopupMenu() (HMENU, error) {
 // See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-createmenu
 func CreateMenu() (HMENU, error) {
 	ret, _, err := procCreateMenu.Call()
-
 	if ret == 0 && err.(syscall.Errno) != ERROR_SUCCESS {
 		return HMENU(ret), err
 	}
-
 	return HMENU(ret), nil
+}
+
+// DestroyMenu Destroys the specified menu and frees any memory that the menu occupies.
+// See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-destroymenu
+func DestroyMenu(menu HMENU) (bool, error) {
+	ret, _, err := procDestroyMenu.Call()
+	if ret == 0 && err.(syscall.Errno) != ERROR_SUCCESS {
+		return false, err
+	}
+	return ret != 0, nil
 }
