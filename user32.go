@@ -145,6 +145,7 @@ var (
 	procGetSubMenu                    = moduser32.NewProc("GetSubMenu")
 	procRegisterWindowMessageW        = moduser32.NewProc("RegisterWindowMessageW")
 	procGetMenuItemID                 = moduser32.NewProc("GetMenuItemID")
+	procDeleteMenu                    = moduser32.NewProc("DeleteMenu")
 )
 
 func SendMessageTimeout(hwnd HWND, msg uint32, wParam, lParam uintptr, fuFlags, uTimeout uint32, lpdwResult uintptr) uintptr {
@@ -1234,8 +1235,8 @@ func UnregisterClass(lpClassName string, hInstance HINSTANCE) bool {
 // See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-createpopupmenu
 func CreatePopupMenu() (HMENU, error) {
 	ret, _, err := procCreatePopupMenu.Call()
-	if ret == 0 && err.(syscall.Errno) != ERROR_SUCCESS {
-		return HMENU(ret), err
+	if !IsErrSuccess(err) {
+		return HMENU(nil), err
 	}
 	return HMENU(ret), nil
 }
@@ -1245,8 +1246,8 @@ func CreatePopupMenu() (HMENU, error) {
 // See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-createmenu
 func CreateMenu() (HMENU, error) {
 	ret, _, err := procCreateMenu.Call()
-	if ret == 0 && err.(syscall.Errno) != ERROR_SUCCESS {
-		return HMENU(ret), err
+	if !IsErrSuccess(err) {
+		return HMENU(nil), err
 	}
 	return HMENU(ret), nil
 }
@@ -1255,7 +1256,7 @@ func CreateMenu() (HMENU, error) {
 // See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-destroymenu
 func DestroyMenu(hMenu HMENU) (bool, error) {
 	ret, _, err := procDestroyMenu.Call(uintptr(hMenu))
-	if ret == 0 && err.(syscall.Errno) != ERROR_SUCCESS {
+	if !IsErrSuccess(err) {
 		return false, err
 	}
 	return ret != 0, nil
@@ -1269,7 +1270,7 @@ func DestroyMenu(hMenu HMENU) (bool, error) {
 // See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getsubmenu
 func GetSubMenu(hMenu HMENU, nPos int) (HMENU, error) {
 	ret, _, err := procGetSubMenu.Call(uintptr(hMenu), uintptr(nPos))
-	if ret == 0 && err.(syscall.Errno) != ERROR_SUCCESS {
+	if !IsErrSuccess(err) {
 		return HMENU(nil), err
 	}
 	return HMENU(ret), nil
@@ -1281,7 +1282,7 @@ func GetSubMenu(hMenu HMENU, nPos int) (HMENU, error) {
 // See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registerwindowmessagew
 func RegisterWindowMessage(lpString string) (bool, error) {
 	ret, _, err := procRegisterWindowMessageW.Call(uintptr(pointerStringWithoutError(lpString)))
-	if ret == 0 && err.(syscall.Errno) != ERROR_SUCCESS {
+	if !IsErrSuccess(err) {
 		return false, err
 	}
 	return ret != 0, nil
@@ -1291,8 +1292,19 @@ func RegisterWindowMessage(lpString string) (bool, error) {
 // See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getmenuitemid
 func GetMenuItemID(hMenu HMENU, nPos int) (int32, error) {
 	ret, _, err := procGetMenuItemID.Call(uintptr(hMenu), uintptr(nPos))
-	if err.(syscall.Errno) != ERROR_SUCCESS {
+	if !IsErrSuccess(err) {
 		return -1, err
 	}
 	return int32(ret), nil
+}
+
+// DeleteMenu Deletes an item from the specified menu. If the menu item opens a menu or submenu, this function
+// destroys the handle to the menu or submenu and frees the memory used by the menu or submenu.
+// See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-deletemenu
+func DeleteMenu(hMenu HMENU, uPosition uint, uFlags uint) (bool, error) {
+	ret, _, err := procGetMenuItemID.Call(uintptr(hMenu), uintptr(uPosition), uintptr(uFlags))
+	if !IsErrSuccess(err) {
+		return false, err
+	}
+	return ret != 0, nil
 }

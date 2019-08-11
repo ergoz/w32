@@ -235,7 +235,7 @@ func HexToUint32(hexString string) (result uint32, err error) {
 // localized depending on the OS language.
 func IsErrSuccess(err error) bool {
 	if errno, ok := err.(syscall.Errno); ok {
-		if errno == 0 {
+		if errno == ERROR_SUCCESS {
 			return true
 		}
 	}

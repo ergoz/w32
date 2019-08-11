@@ -246,7 +246,7 @@ func CreateProcessA(lpApplicationName string,
 		uintptr(unsafe.Pointer(lpStartupInfo)),
 		uintptr(unsafe.Pointer(lpProcessInformation)))
 
-	if ret == 0 && err.(syscall.Errno) != ERROR_SUCCESS {
+	if ret == 0 && !IsErrSuccess(err) {
 		return false, err
 	}
 	return ret != 0, nil
