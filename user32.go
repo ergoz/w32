@@ -147,6 +147,7 @@ var (
 	procGetMenuItemID                 = moduser32.NewProc("GetMenuItemID")
 	procDeleteMenu                    = moduser32.NewProc("DeleteMenu")
 	procAppendMenuW                   = moduser32.NewProc("AppendMenuW")
+	procDrawMenuBar                   = moduser32.NewProc("DrawMenuBar")
 )
 
 func SendMessageTimeout(hwnd HWND, msg uint32, wParam, lParam uintptr, fuFlags, uTimeout uint32, lpdwResult uintptr) uintptr {
@@ -1322,6 +1323,19 @@ func AppendMenu(hMenu HMENU, uFlags uint, uIDNewItem uintptr, lpNewItem string) 
 		uintptr(uFlags),
 		uIDNewItem,
 		uintptr(pointerStringWithoutError(lpNewItem)),
+	)
+	if !IsErrSuccess(err) {
+		return false, err
+	}
+	return ret != 0, nil
+}
+
+// DrawMenuBar Redraws the menu bar of the specified window. If the menu bar changes after
+// the system has created the window, this function must be called to draw the changed menu bar.
+// See https://docs.microsoft.com/ru-ru/windows/win32/api/winuser/nf-winuser-drawmenubar
+func DrawMenuBar(hWnd HWND) (bool, error) {
+	ret, _, err := procDrawMenuBar.Call(
+		uintptr(hWnd),
 	)
 	if !IsErrSuccess(err) {
 		return false, err
