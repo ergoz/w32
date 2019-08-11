@@ -72,7 +72,7 @@ func SetSecurityDescriptorDacl(pSecurityDescriptor *SECURITY_DESCRIPTOR, pDacl *
 func ControlTrace(hTrace TRACEHANDLE, lpSessionName string, props *EVENT_TRACE_PROPERTIES, dwControl uint32) (success bool, e error) {
 
 	ret, _, _ := procControlTrace.Call(
-		uintptr(unsafe.Pointer(hTrace)),
+		uintptr(hTrace),
 		uintptr(pointerStringWithoutError(lpSessionName)),
 		uintptr(unsafe.Pointer(props)),
 		uintptr(dwControl))

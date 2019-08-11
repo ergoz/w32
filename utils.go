@@ -202,7 +202,7 @@ func ComInvoke(disp *IDispatch, dispid int32, dispatch int16, params ...interfac
 	}
 	for _, varg := range vargs {
 		if varg.VT == VT_BSTR && varg.Val != 0 {
-			SysFreeString(((*int16)(unsafe.Pointer(uintptr(varg.Val)))))
+			SysFreeString((*int16)(unsafe.Pointer(uintptr(varg.Val))))
 		}
 	}
 	result = &ret

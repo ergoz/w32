@@ -714,7 +714,7 @@ func DialogBox(hInstance HINSTANCE, lpTemplateName string, hWndParent HWND, lpDi
 
 func GetDlgItem(hDlg HWND, nIDDlgItem int) HWND {
 	ret, _, _ := procGetDlgItem.Call(
-		uintptr(unsafe.Pointer(hDlg)),
+		uintptr(hDlg),
 		uintptr(nIDDlgItem))
 
 	return HWND(ret)
@@ -722,10 +722,10 @@ func GetDlgItem(hDlg HWND, nIDDlgItem int) HWND {
 
 func DrawIcon(hDC HDC, x, y int, hIcon HICON) bool {
 	ret, _, _ := procDrawIcon.Call(
-		uintptr(unsafe.Pointer(hDC)),
+		uintptr(hDC),
 		uintptr(x),
 		uintptr(y),
-		uintptr(unsafe.Pointer(hIcon)))
+		uintptr(hIcon))
 
 	return ret != 0
 }
