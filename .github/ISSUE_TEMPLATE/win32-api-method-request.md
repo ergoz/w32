@@ -1,8 +1,8 @@
 ---
 name: Win32 API Method Request
 about: Suggest a new Win32 API Method
-title: "[NEW_MR] LIB_NAME - Method Name"
-labels: enhancement, method request
+title: "[ADD_API] LIB_NAME - Method_Name"
+labels: method request
 assignees: ''
 
 ---
