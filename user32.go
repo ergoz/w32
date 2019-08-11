@@ -1073,7 +1073,7 @@ func SendInput(inputs []INPUT) (err error) {
 	_, _, err = procSendInput.Call(
 		uintptr(len(validInputs)),
 		uintptr(unsafe.Pointer(&validInputs[0])),
-		uintptr(unsafe.Sizeof(C.INPUT{})),
+		unsafe.Sizeof(C.INPUT{}),
 	)
 	if !IsErrSuccess(err) {
 		return
@@ -1116,7 +1116,7 @@ func SendInputString(input string) (err error) {
 func SetWindowsHookEx(idHook int, lpfn HOOKPROC, hMod HINSTANCE, dwThreadId DWORD) HHOOK {
 	ret, _, _ := procSetWindowsHookEx.Call(
 		uintptr(idHook),
-		uintptr(syscall.NewCallback(lpfn)),
+		syscall.NewCallback(lpfn),
 		uintptr(hMod),
 		uintptr(dwThreadId),
 	)
@@ -1130,7 +1130,7 @@ func SetWinEventHook(eventMin DWORD, eventMax DWORD, hmodWinEventProc HMODULE, p
 		uintptr(eventMin),
 		uintptr(eventMax),
 		uintptr(hmodWinEventProc),
-		uintptr(syscall.NewCallback(pfnWinEventProc)),
+		syscall.NewCallback(pfnWinEventProc),
 		uintptr(idProcess),
 		uintptr(idThread),
 		uintptr(dwFlags),
@@ -1194,7 +1194,7 @@ func UnregisterHotKey(hwnd HWND, id int) (err error) {
 
 // Translates a character to the corresponding virtual-key code and shift state for the current keyboard.
 // See https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-vkkeyscanw
-func VkKeyScanW(char uint16) int16 {
+func VkKeyScan(char uint16) int16 {
 	ret, _, _ := procVkKeyScanW.Call(
 		uintptr(char),
 	)
@@ -1203,7 +1203,7 @@ func VkKeyScanW(char uint16) int16 {
 
 // Translates a character to the corresponding virtual-key code and shift state.
 // See https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-vkkeyscanexw
-func VkKeyScanExW(char uint16, hkl HKL) int16 {
+func VkKeyScanEx(char uint16, hkl HKL) int16 {
 	ret, _, _ := procVkKeyScanExW.Call(
 		uintptr(char),
 		uintptr(hkl),
@@ -1220,7 +1220,7 @@ func SetProcessDPIAware() bool {
 
 // UnregisterClassW Unregisters a window class, freeing the memory required for the class.
 // See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-unregisterclassw
-func UnregisterClassW(lpClassName string, hInstance HINSTANCE) bool {
+func UnregisterClass(lpClassName string, hInstance HINSTANCE) bool {
 	ret, _, _ := procUnregisterClassW.Call(
 		uintptr(pointerStringWithoutError(lpClassName)),
 		uintptr(hInstance))
@@ -1274,11 +1274,11 @@ func GetSubMenu(hMenu HMENU, nPos int) (HMENU, error) {
 	return HMENU(ret), nil
 }
 
-// RegisterWindowMessageW Defines a new window message that is guaranteed to be unique throughout the system.
+// RegisterWindowMessage Defines a new window message that is guaranteed to be unique throughout the system.
 // The message value can be used when sending or posting messages.
 // lpString - The message to be registered.
 // See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registerwindowmessagew
-func RegisterWindowMessageW(lpString string) (bool, error) {
+func RegisterWindowMessage(lpString string) (bool, error) {
 	ret, _, err := procRegisterWindowMessageW.Call(uintptr(pointerStringWithoutError(lpString)))
 	if ret == 0 && err.(syscall.Errno) != ERROR_SUCCESS {
 		return false, err
