@@ -143,6 +143,7 @@ var (
 	procCreateMenu                    = moduser32.NewProc("CreateMenu")
 	procDestroyMenu                   = moduser32.NewProc("DestroyMenu")
 	procGetSubMenu                    = moduser32.NewProc("GetSubMenu")
+	procRegisterWindowMessageW        = moduser32.NewProc("RegisterWindowMessageW")
 )
 
 func SendMessageTimeout(hwnd HWND, msg uint32, wParam, lParam uintptr, fuFlags, uTimeout uint32, lpdwResult uintptr) uintptr {
@@ -1318,8 +1319,8 @@ func CreateMenu() (HMENU, error) {
 
 // DestroyMenu Destroys the specified menu and frees any memory that the menu occupies.
 // See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-destroymenu
-func DestroyMenu(menu HMENU) (bool, error) {
-	ret, _, err := procDestroyMenu.Call(uintptr(menu))
+func DestroyMenu(hMenu HMENU) (bool, error) {
+	ret, _, err := procDestroyMenu.Call(uintptr(hMenu))
 	if ret == 0 && err.(syscall.Errno) != ERROR_SUCCESS {
 		return false, err
 	}
@@ -1327,11 +1328,27 @@ func DestroyMenu(menu HMENU) (bool, error) {
 }
 
 // GetSubMenu Retrieves a handle to the drop-down menu or submenu activated by the specified menu item.
+// hMenu - A handle to the menu.
+// nPos - The zero-based relative position in the specified menu of an item that activates a drop-down menu or submenu.
+// return value - If the function succeeds, the return value is a handle to the drop-down menu or submenu activated by
+// the menu item. If the menu item does not activate a drop-down menu or submenu, the return value is NULL.
 // See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getsubmenu
-func GetSubMenu(menu HMENU, nPos int) (HMENU, error) {
-	ret, _, err := procGetSubMenu.Call(uintptr(menu), uintptr(nPos))
+func GetSubMenu(hMenu HMENU, nPos int) (HMENU, error) {
+	ret, _, err := procGetSubMenu.Call(uintptr(hMenu), uintptr(nPos))
 	if ret == 0 && err.(syscall.Errno) != ERROR_SUCCESS {
 		return HMENU(nil), err
 	}
 	return HMENU(ret), nil
+}
+
+// RegisterWindowMessageW Defines a new window message that is guaranteed to be unique throughout the system.
+// The message value can be used when sending or posting messages.
+// lpString - The message to be registered.
+// See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registerwindowmessagew
+func RegisterWindowMessageW(lpString string) (bool, error) {
+	ret, _, err := procRegisterWindowMessageW.Call(uintptr(pointerStringWithoutError(lpString)))
+	if ret == 0 && err.(syscall.Errno) != ERROR_SUCCESS {
+		return false, err
+	}
+	return ret != 0, nil
 }
