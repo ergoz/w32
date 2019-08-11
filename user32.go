@@ -152,6 +152,7 @@ var (
 	procTrackPopupMenu                = moduser32.NewProc("TrackPopupMenu")
 	procSetMenuItemBitmaps            = moduser32.NewProc("SetMenuItemBitmaps")
 	procLoadImageW                    = moduser32.NewProc("LoadImageW")
+	procSetMenuInfo                   = moduser32.NewProc("SetMenuInfo")
 )
 
 func SendMessageTimeout(hwnd HWND, msg uint32, wParam, lParam uintptr, fuFlags, uTimeout uint32, lpdwResult uintptr) uintptr {
@@ -1418,4 +1419,18 @@ func LoadImageW(hInst HINSTANCE, name string, ltype uint32, cx int, cy int, fuLo
 		return HANDLE(nil), err
 	}
 	return HANDLE(ret), nil
+}
+
+// SetMenuInfo Sets information for a specified menu.
+// See https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setmenuinfo
+func SetMenuInfo(hMenu HMENU, menuInfo MENUINFO) (bool, error) {
+	ret, _, err := procSetMenuInfo.Call(
+		uintptr(hMenu),
+		uintptr(unsafe.Pointer(&menuInfo)),
+	)
+	if !IsErrSuccess(err) {
+		return false, err
+	}
+
+	return ret != 0, nil
 }

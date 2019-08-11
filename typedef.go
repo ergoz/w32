@@ -1368,6 +1368,16 @@ type PNOTIFYICONDATA struct {
 }
 
 type TPMPARAMS struct {
-	cbSize    uint
-	rcExclude RECT
+	Size    uint
+	Exclude RECT
+}
+
+type MENUINFO struct {
+	Size          DWORD
+	Mask          DWORD
+	Style         DWORD
+	Max           uint32
+	HBRBack       HBRUSH
+	ContextHelpID DWORD
+	MenuData      uintptr
 }
